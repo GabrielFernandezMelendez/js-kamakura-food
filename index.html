@@ -49,7 +49,16 @@
             </div>
         </aside>
     </div>
-
+   <!-- TAREA 7 — Modal de confirmación de pago -->
+    <!-- Vive fuera del aside para cubrir TODA la pantalla -->
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>¡Pedido confirmado! 🎉</h2>
+            <p>Tu pedido ha sido enviado a cocina.</p>
+            <p>Gracias por elegir <strong>Kamakura Food</strong>.</p>
+            <button id="close-modal" class="close-modal-button">Cerrar</button>
+        </div>
+    </div>
     <!-- Punto de entrada principal — type="module" activa los ESModules -->
     <script type="module" src="./src/events.js"></script>
 </body>

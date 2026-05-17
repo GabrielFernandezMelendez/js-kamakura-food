@@ -4,15 +4,6 @@ import { products } from './menu.js';
 
 // ─────────────────────────────────────────────
 // ESTADO del carrito
-//
-// `cart` es un array que actúa como la "memoria" de la app.
-// Cada elemento será un objeto con todas las propiedades del
-// producto MÁS una propiedad `quantity` que añadimos nosotros.
-//
-// Ejemplo de elemento en cart:
-// { id: 2, name: 'Shogun roll', price: 8.25, category: 'sushi', quantity: 1 }
-//
-// Usamos `let` porque el array se reasigna al eliminar productos.
 // ─────────────────────────────────────────────
 let cart = [];
 
@@ -27,28 +18,63 @@ export const toggleCart = () => {
 
 
 // ─────────────────────────────────────────────
+// TAREA 5 — Calcular el total del carrito
+//
+// .reduce() recorre el array `cart` y acumula la suma de
+// (precio × cantidad) de cada plato, empezando desde 0.
+//
+// Ejemplo con 2 platos:
+//   Shogun roll  8.25 × 2 = 16.50
+//   Alaska roll  6.50 × 1 =  6.50
+//   ─────────────────────────────
+//   Total                 = 23.00
+// ─────────────────────────────────────────────
+export const calculateTotal = () => {
+    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+};
+
+
+// ─────────────────────────────────────────────
+// TAREA 5 — Actualizar la cantidad de un plato
+//
+// Recibe el `id` del plato y la acción ('plus' o 'minus').
+//
+// Usamos .map() para recorrer el array y devolver uno nuevo
+// donde SOLO el item con ese id tiene la cantidad modificada.
+// Esto es inmutabilidad: no modificamos el objeto original,
+// sino que creamos uno nuevo con spread {...item}.
+//
+// Después filtramos con .filter() para eliminar cualquier
+// plato cuya quantity haya llegado a 0.
+//
+// Finalmente llamamos a printCart() para reflejar el cambio.
+// ─────────────────────────────────────────────
+export const updateQuantity = (id, action) => {
+    cart = cart.map(item => {
+        if (item.id !== id) return item; // no es el plato buscado → sin cambios
+
+        // Creamos un nuevo objeto con la cantidad actualizada
+        return {
+            ...item,
+            quantity: action === 'plus' ? item.quantity + 1 : item.quantity - 1
+        };
+    });
+
+    // Si quantity llegó a 0 → eliminamos el plato del carrito
+    cart = cart.filter(item => item.quantity > 0);
+
+    printCart();
+};
+
+
+// ─────────────────────────────────────────────
 // TAREA 4 — Añadir un plato al carrito
-//
-// Recibe el `id` del producto (lo leeremos del data-id del botón).
-//
-// Pasos:
-//   1. Comprobamos con .find() si el producto ya está en `cart`.
-//      Si existe → salimos con `return` (sin duplicados).
-//   2. Buscamos el producto completo en `products` con .find().
-//   3. Lo añadimos a `cart` con spread {...product} para copiar
-//      todas sus propiedades, y le sumamos `quantity: 1`.
-//   4. Llamamos a printCart() para reflejar el cambio en el DOM.
 // ─────────────────────────────────────────────
 export const addToCart = (id) => {
-    // ¿Ya está en el carrito? (comparamos como número con ===)
     const alreadyInCart = cart.find(item => item.id === id);
-    if (alreadyInCart) return; // salimos sin hacer nada
+    if (alreadyInCart) return;
 
-    // Encontramos el producto completo en el array original
     const product = products.find(p => p.id === id);
-
-    // Lo añadimos al carrito con quantity inicial de 1
-    // {...product} crea una COPIA del objeto, no una referencia
     cart.push({ ...product, quantity: 1 });
 
     printCart();
@@ -57,12 +83,6 @@ export const addToCart = (id) => {
 
 // ─────────────────────────────────────────────
 // TAREA 4 — Eliminar un plato del carrito
-//
-// Recibe el `id` del producto a eliminar.
-//
-// .filter() devuelve un NUEVO array con todos los elementos
-// EXCEPTO el que tenga ese id. Así nunca mutamos el array
-// directamente, sino que lo sustituimos por uno nuevo.
 // ─────────────────────────────────────────────
 export const removeFromCart = (id) => {
     cart = cart.filter(item => item.id !== id);
@@ -71,22 +91,22 @@ export const removeFromCart = (id) => {
 
 
 // ─────────────────────────────────────────────
-// TAREA 4 — Pintar el carrito en el DOM
+// TAREA 4 + 5 — Pintar el carrito en el DOM
 //
-// Lee el array `cart` y genera el HTML para cada plato.
-// Si el carrito está vacío, muestra el mensaje por defecto.
+// Ahora también actualiza el total después de renderizar
+// los platos, usando calculateTotal().
 //
-// Cada tarjeta del carrito tiene:
-//   - Botón "x" (close-button) con data-id → para eliminar
-//   - Nombre y precio del plato
-//   - Contador con botones "+" y "-" con data-id → para tarea 5
+// Cada plato del carrito muestra:
+//   - Subtotal individual: price × quantity
+//   - El total global se escribe en #cart-total
 // ─────────────────────────────────────────────
 export const printCart = () => {
     const cartProducts = document.getElementById('cart-products');
+    const cartTotal = document.getElementById('cart-total');
 
-    // Si el carrito está vacío mostramos el mensaje inicial
     if (cart.length === 0) {
         cartProducts.innerHTML = '<h3>Añade un plato a tu menú</h3>';
+        cartTotal.textContent = 'Total: €';
         return;
     }
 
@@ -106,7 +126,22 @@ export const printCart = () => {
             </div>
         </div>`
     ).join('');
+
+    // TAREA 5 — Actualizamos el total en el DOM
+    cartTotal.textContent = `Total: ${calculateTotal().toFixed(2)} €`;
 };
 
-// Exportamos cart para que otros módulos (receipt) puedan leerlo
+// ─────────────────────────────────────────────
+// TAREA 7 — Vaciar el carrito completamente
+//
+// Resetea el array `cart` a vacío y vuelve a pintar
+// el carrito para reflejar que está limpio.
+// Se llama cuando el usuario cierra el modal de pago.
+// ─────────────────────────────────────────────
+export const clearCart = () => {
+    cart = [];
+    printCart();
+};
+
+// Exportamos cart para que receipt.js pueda leerlo
 export { cart };

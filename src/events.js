@@ -5,7 +5,8 @@
 // Es el punto de entrada → lo carga el index.html con type="module".
 import { printFilters, printProducts } from './menu.js';
 import { filterByCategory } from './searcher.js';
-import { toggleCart, addToCart, removeFromCart } from './cart.js';
+import { toggleCart, addToCart, removeFromCart,updateQuantity  } from './cart.js';
+import { printReceipt, closeReceipt, showModal, closeModal } from './receipt.js';
 
 /**
  * Inicialización de la app.
@@ -76,22 +77,50 @@ productsContainer.addEventListener('click', (e) => {
 });
  
 // ─────────────────────────────────────────────
-// TAREA 4 — Eliminar del carrito (delegación sobre #cart-products)
+// TAREAS 4 + 5 — Interacciones dentro del carrito
 //
-// El botón "x" tiene clase "close-button" y data-id.
-// Como los elementos del carrito se regeneran con innerHTML,
-// no podemos añadir listeners directamente a ellos (desaparecen
-// y se recrean). La delegación sobre el contenedor padre
-// soluciona este problema: el contenedor siempre existe.
+// Un ÚNICO listener en #cart-products gestiona los tres botones:
+//   • close-button → eliminar plato
+//   • plus-button  → aumentar cantidad
+//   • minus-button → reducir cantidad (a 0 = elimina el plato)
+//
+// Usamos .closest() en todos porque dentro de cada botón
+// puede haber elementos hijos (la imagen del close, por ejemplo)
+// y e.target podría apuntar al hijo en vez de al botón.
+// .closest() sube por el DOM hasta encontrar el elemento correcto.
 // ─────────────────────────────────────────────
 const cartProductsContainer = document.getElementById('cart-products');
  
 cartProductsContainer.addEventListener('click', (e) => {
-    // closest() sube por el DOM hasta encontrar el close-button
-    // aunque se haga click en la imagen <img> que está dentro
     const closeButton = e.target.closest('.close-button');
+    const plusButton  = e.target.closest('.plus-button');
+    const minusButton = e.target.closest('.minus-button');
+ 
     if (closeButton) {
-        const id = Number(closeButton.dataset.id);
-        removeFromCart(id);
+        removeFromCart(Number(closeButton.dataset.id));
+    } else if (plusButton) {
+        updateQuantity(Number(plusButton.dataset.id), 'plus');
+    } else if (minusButton) {
+        updateQuantity(Number(minusButton.dataset.id), 'minus');
     }
 });
+
+// ─────────────────────────────────────────────
+// TAREA 6 — Mostrar el recibo al proceder al pago
+// ─────────────────────────────────────────────
+document.getElementById('proceedPay-button').addEventListener('click', printReceipt);
+ 
+// ─────────────────────────────────────────────
+// TAREA 6 — Cerrar el recibo con el botón "x"
+// ─────────────────────────────────────────────
+document.getElementById('close-receipt').addEventListener('click', closeReceipt);
+ 
+// ─────────────────────────────────────────────
+// TAREA 7 — Abrir el modal al hacer click en "Pagar"
+// ─────────────────────────────────────────────
+document.getElementById('pay-button').addEventListener('click', showModal);
+ 
+// ─────────────────────────────────────────────
+// TAREA 7 — Cerrar el modal (limpia recibo y carrito)
+// ─────────────────────────────────────────────
+document.getElementById('close-modal').addEventListener('click', closeModal);
