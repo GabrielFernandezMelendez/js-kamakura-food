@@ -5,6 +5,7 @@
 // Es el punto de entrada → lo carga el index.html con type="module".
 import { printFilters, printProducts } from './menu.js';
 import { filterByCategory } from './searcher.js';
+import { toggleCart, addToCart, removeFromCart } from './cart.js';
 
 /**
  * Inicialización de la app.
@@ -41,5 +42,56 @@ filtersContainer.addEventListener('click', (e) => {
         // Filtramos y volvemos a imprimir solo los platos de esa categoría
         const filteredProducts = filterByCategory(selectedCategory);
         printProducts(filteredProducts);
+    }
+});
+
+ 
+// ─────────────────────────────────────────────
+// TAREA 3 — Toggle del carrito
+// El botón #cart (icono del carrito en el header)
+// abre y cierra el panel lateral #cart-container
+// ─────────────────────────────────────────────
+const cartButton = document.getElementById('cart');
+ 
+cartButton.addEventListener('click', toggleCart);
+
+
+// ─────────────────────────────────────────────
+// TAREA 4 — Añadir al carrito (delegación sobre #products)
+//
+// Usamos delegación: un solo listener en #products captura
+// todos los clicks en los botones "Añadir" de cada plato.
+//
+// e.target.dataset.id devuelve un STRING ("2"), pero los ids
+// en products son NÚMEROS (2). Por eso usamos Number() para
+// convertirlo antes de pasarlo a addToCart().
+// ─────────────────────────────────────────────
+const productsContainer = document.getElementById('products');
+ 
+productsContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('add-button')) {
+        const id = Number(e.target.dataset.id); // "2" → 2
+        addToCart(id);
+    }
+});
+ 
+// ─────────────────────────────────────────────
+// TAREA 4 — Eliminar del carrito (delegación sobre #cart-products)
+//
+// El botón "x" tiene clase "close-button" y data-id.
+// Como los elementos del carrito se regeneran con innerHTML,
+// no podemos añadir listeners directamente a ellos (desaparecen
+// y se recrean). La delegación sobre el contenedor padre
+// soluciona este problema: el contenedor siempre existe.
+// ─────────────────────────────────────────────
+const cartProductsContainer = document.getElementById('cart-products');
+ 
+cartProductsContainer.addEventListener('click', (e) => {
+    // closest() sube por el DOM hasta encontrar el close-button
+    // aunque se haga click en la imagen <img> que está dentro
+    const closeButton = e.target.closest('.close-button');
+    if (closeButton) {
+        const id = Number(closeButton.dataset.id);
+        removeFromCart(id);
     }
 });
